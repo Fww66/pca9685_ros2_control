@@ -18,7 +18,7 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
   const hardware_interface::HardwareInfo & info)
 {
 
-  pca.set_pwm_freq(50.0);
+  // pca.set_pwm_freq(50.0);
 
   if (
     hardware_interface::SystemInterface::on_init(info) !=
@@ -75,8 +75,10 @@ std::vector<hardware_interface::CommandInterface> Pca9685SystemHardware::export_
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
       info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+    
+    hw_channels_.emplace_back(std::stoi(info_.joints[i].parameters.at("channel")));
   }
-
+  
   return command_interfaces;
 }
 
@@ -133,14 +135,19 @@ hardware_interface::return_type Pca9685SystemHardware::write(
 
   for (auto i = 0u; i < hw_commands_.size(); i++)
   {
-    double duty_cycle = command_to_duty_cycle(hw_commands_[i]);
+    // double duty_cycle = command_to_duty_cycle(hw_commands_[i]);
 
     // RCLCPP_INFO(
     //     rclcpp::get_logger("Pca9685SystemHardware"),
     //     "Joint '%d' has command '%f', duty_cycle: '%f'.", i, hw_commands_[i], duty_cycle);
 
-    pca.set_pwm_ms(i, duty_cycle);
+    // pca.set_pwm_ms(i, duty_cycle);
 
+    RCLCPP_INFO(
+        rclcpp::get_logger("Pca9685SystemHardware"),
+        "joint: %s, channel: %d, command %.3f", info_.joints[i].name.c_str(),  hw_channels_[i], hw_commands_[i]);
+
+    // pca.set_speed(hw_channels_[i], hw_commands_[i]);
   }
 
   return hardware_interface::return_type::OK;
