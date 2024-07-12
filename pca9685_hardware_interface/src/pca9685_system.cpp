@@ -1,3 +1,4 @@
+
 #include "pca9685_hardware_interface/pca9685_system.hpp"
 
 #include <chrono>
@@ -10,13 +11,12 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-
-
 namespace pca9685_hardware_interface
 {
 hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
   const hardware_interface::HardwareInfo & info)
 {
+  encoder_wj166_ = std::make_shared<encoder_wj166::Implementation>();
 
   // pca.set_pwm_freq(50.0);
 
@@ -26,8 +26,6 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
   {
     return hardware_interface::CallbackReturn::ERROR;
   }
-
-  hw_commands_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
@@ -51,6 +49,12 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     }
   }
 
+  for (const hardware_interface::ComponentInfo & joint : info_.joints)
+  {
+    hw_interfaces_[joint.name] = Joint(joint.name);
+    hw_interfaces_[joint.name].channel = std::stoi(joint.parameters.at("channel"));  
+  }
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -58,11 +62,14 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
 std::vector<hardware_interface::StateInterface> Pca9685SystemHardware::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
-  
-  for (auto i = 0u; i < info_.joints.size(); i++)
+
+  for (auto & joint : hw_interfaces_)
   {
     state_interfaces.emplace_back(hardware_interface::StateInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+      joint.second.joint_name, hardware_interface::HW_IF_POSITION, &joint.second.state.position));
+
+    state_interfaces.emplace_back(hardware_interface::StateInterface(
+      joint.second.joint_name, hardware_interface::HW_IF_VELOCITY, &joint.second.state.velocity));
   }
 
   return state_interfaces;
@@ -71,26 +78,25 @@ std::vector<hardware_interface::StateInterface> Pca9685SystemHardware::export_st
 std::vector<hardware_interface::CommandInterface> Pca9685SystemHardware::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  for (auto i = 0u; i < info_.joints.size(); i++)
+  
+  for (auto & joint : hw_interfaces_)
   {
     command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
-    
-    hw_channels_.emplace_back(std::stoi(info_.joints[i].parameters.at("channel")));
+      joint.second.joint_name, hardware_interface::HW_IF_VELOCITY, &joint.second.command.velocity));
   }
-  
+
   return command_interfaces;
 }
 
 hardware_interface::CallbackReturn Pca9685SystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  for (auto i = 0u; i < hw_commands_.size(); i++)
+  for (auto & joint : hw_interfaces_)
   {
-    if (std::isnan(hw_commands_[i]))
-    {
-      hw_commands_[i] = 0;
-    }
+    joint.second.state.position = 0.0;
+    joint.second.state.velocity = 0.0;
+
+    joint.second.command.velocity = 0.0;
   }
 
   RCLCPP_INFO(rclcpp::get_logger("Pca9685SystemHardware"), "Successfully activated!");
@@ -107,47 +113,29 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_deactivate(
 hardware_interface::return_type Pca9685SystemHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  for (auto & joint : hw_interfaces_)
+  {
+    joint.second.state.position = encoder_wj166_->get_position(joint.second.channel);
+    joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.channel);
+
+    RCLCPP_INFO(
+      rclcpp::get_logger("Pca9685SystemHardware"),
+      "state joint: %s, channel: %d, position: %.3f, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.channel, joint.second.state.position, joint.second.state.velocity);
+  }
 
   return hardware_interface::return_type::OK;
-}
-
-double Pca9685SystemHardware::command_to_duty_cycle(double command){
-
-    double min_input = -1.0;
-    double max_input = 1.0;
-
-    double clamped_command = std::clamp(command, min_input, max_input);
-
-    double min_duty_cycle = 0.5;
-    double max_duty_cycle = 2.5;
-
-
-    double slope = (max_duty_cycle-min_duty_cycle)/(max_input-min_input);
-    double offset = (max_duty_cycle+min_duty_cycle)/2;
-
-    return slope * clamped_command + offset;
-
 }
 
 hardware_interface::return_type Pca9685SystemHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
-
-  for (auto i = 0u; i < hw_commands_.size(); i++)
+  for (auto & joint : hw_interfaces_)
   {
-    // double duty_cycle = command_to_duty_cycle(hw_commands_[i]);
-
-    // RCLCPP_INFO(
-    //     rclcpp::get_logger("Pca9685SystemHardware"),
-    //     "Joint '%d' has command '%f', duty_cycle: '%f'.", i, hw_commands_[i], duty_cycle);
-
-    // pca.set_pwm_ms(i, duty_cycle);
+    // pca.set_speed(joint.second.channel, joint.second.command.velocity);
 
     RCLCPP_INFO(
-        rclcpp::get_logger("Pca9685SystemHardware"),
-        "joint: %s, channel: %d, command %.3f", info_.joints[i].name.c_str(),  hw_channels_[i], hw_commands_[i]);
-
-    // pca.set_speed(hw_channels_[i], hw_commands_[i]);
+      rclcpp::get_logger("Pca9685SystemHardware"),
+      "command joint: %s, channel: %d, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.channel, joint.second.command.velocity);
   }
 
   return hardware_interface::return_type::OK;

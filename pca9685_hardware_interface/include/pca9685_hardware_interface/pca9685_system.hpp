@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <map>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -18,9 +19,35 @@
 
 #include "pca9685_hardware_interface/visibility_control.h"
 #include <pca9685_hardware_interface/pca9685_comm.h>
+#include <pca9685_hardware_interface/encoder_wj166.hpp>
 
 namespace pca9685_hardware_interface
 {
+
+struct JointValue
+{
+  double position{0.0};
+  double velocity{0.0};
+  double effort{0.0};
+};
+
+struct Joint
+{
+  explicit Joint(const std::string & name) : joint_name(name)
+  {
+    channel = 0;
+    state = JointValue();
+    command = JointValue();
+  }
+
+  Joint() = default;
+
+  std::string joint_name;
+  int channel;  
+  JointValue state;
+  JointValue command;
+};
+
 class Pca9685SystemHardware : public hardware_interface::SystemInterface
 {
 public:
@@ -53,11 +80,11 @@ public:
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
-  std::vector<double> hw_commands_;
-  // PiPCA9685::PCA9685 pca;
-  double command_to_duty_cycle(double command);
+  std::map<std::string, Joint> hw_interfaces_;
 
-  std::vector<int> hw_channels_;
+  std::shared_ptr<encoder_wj166::Implementation> encoder_wj166_; // 获取编码器值
+
+  // PiPCA9685::PCA9685 pca; // 控制电机旋转
 };
 
 }  // namespace pca9685_hardware_interface

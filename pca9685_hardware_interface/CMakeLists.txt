@@ -31,6 +31,7 @@ add_library(
   src/pca9685_system.cpp
   src/pca9685_comm.cpp
   src/I2CPeripheral.cpp
+  src/encoder_wj166.cpp
 )
 
 target_compile_features(pca9685_hardware_interface PUBLIC cxx_std_17)
@@ -38,7 +39,7 @@ target_include_directories(pca9685_hardware_interface PUBLIC
 $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 $<INSTALL_INTERFACE:include/pca9685_hardware_interface>
 )
-target_link_libraries(pca9685_hardware_interface PUBLIC i2c)
+target_link_libraries(pca9685_hardware_interface PUBLIC i2c modbus)
 ament_target_dependencies(
   pca9685_hardware_interface PUBLIC
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
