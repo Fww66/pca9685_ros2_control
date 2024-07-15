@@ -17,6 +17,7 @@
   <exec_depend>ros2controlcli</exec_depend>
   <exec_depend>controller_manager</exec_depend>
   <exec_depend>pca9685_hardware_interface</exec_depend>
+  <depend>control_toolbox</depend>
 
   <export>
     <build_type>ament_cmake</build_type>

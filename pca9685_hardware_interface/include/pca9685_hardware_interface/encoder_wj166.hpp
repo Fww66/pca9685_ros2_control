@@ -19,9 +19,9 @@ class Implementation
   Implementation(const char *device_path = "/dev/ttyUSB0");
   virtual ~Implementation();
   
-  double get_velocity(const int channel); // 获取速度 单位 rad/s
-  double get_position(const int channel); // 获取位置 单位 rad
-  void   clear_entry(const int channel);  // 清零指定编码器值
+  double get_velocity(const int id); // 获取速度 单位 rad/s
+  double get_position(const int id); // 获取位置 单位 rad
+  void   clear_entry(const int id);  // 清零指定编码器值
   void   clear_all();                     // 清零所有编码器值
   
  private:

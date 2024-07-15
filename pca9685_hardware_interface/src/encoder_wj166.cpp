@@ -22,7 +22,7 @@ Implementation::~Implementation()
   stop_(); 
 }
 
-double Implementation::get_velocity(const int channel)
+double Implementation::get_velocity(const int id)
 {
   readings_mutex_.lock();
   get_velocity_real_();
@@ -32,7 +32,7 @@ double Implementation::get_velocity(const int channel)
   return value;
 }
 
-double Implementation::get_position(const int channel)
+double Implementation::get_position(const int id)
 {
   readings_mutex_.lock();
   get_position_real_();
@@ -42,7 +42,7 @@ double Implementation::get_position(const int channel)
   return value;
 }
 
-void   Implementation::clear_entry(const int channel)  // 清零指定编码器值
+void   Implementation::clear_entry(const int id)  // 清零指定编码器值
 {
   
 }

@@ -52,7 +52,8 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
     hw_interfaces_[joint.name] = Joint(joint.name);
-    hw_interfaces_[joint.name].channel = std::stoi(joint.parameters.at("channel"));  
+    hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
+    hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
   }
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -115,12 +116,12 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 {
   for (auto & joint : hw_interfaces_)
   {
-    joint.second.state.position = encoder_wj166_->get_position(joint.second.channel);
-    joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.channel);
+    joint.second.state.position = encoder_wj166_->get_position(joint.second.encoder_id);
+    joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
-      "state joint: %s, channel: %d, position: %.3f, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.channel, joint.second.state.position, joint.second.state.velocity);
+      "state joint: %s, encoder_id: %d, position: %.3f, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.encoder_id, joint.second.state.position, joint.second.state.velocity);
   }
 
   return hardware_interface::return_type::OK;
@@ -131,11 +132,11 @@ hardware_interface::return_type Pca9685SystemHardware::write(
 {
   for (auto & joint : hw_interfaces_)
   {
-    // pca.set_speed(joint.second.channel, joint.second.command.velocity);
+    // pca.set_force(joint.second.motor_id, joint.second.command.velocity);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
-      "command joint: %s, channel: %d, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.channel, joint.second.command.velocity);
+      "command joint: %s, motor_id: %d, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.motor_id, joint.second.command.velocity);
   }
 
   return hardware_interface::return_type::OK;

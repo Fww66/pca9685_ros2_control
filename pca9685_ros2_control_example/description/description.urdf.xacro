@@ -7,25 +7,41 @@
       <plugin>pca9685_hardware_interface/Pca9685SystemHardware</plugin>
     </hardware>
     <joint name="joint_1">
-      <param name="channel">0</param>
+      <param name="motor_id">1</param>
+      <param name="encoder_id">0</param>
+      <param name="vel_kp">10</param>
+      <param name="vel_ki">10</param>
+      <param name="vel_kd">0.1</param>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
     </joint>
     <joint name="joint_2">
-      <param name="channel">1</param>
+      <param name="motor_id">2</param>
+      <param name="encoder_id">1</param>
+      <param name="vel_kp">10</param>
+      <param name="vel_ki">10</param>
+      <param name="vel_kd">0.1</param>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
     </joint>
     <joint name="joint_3">
-      <param name="channel">2</param>
+      <param name="motor_id">3</param>
+      <param name="encoder_id">2</param>
+      <param name="vel_kp">10</param>
+      <param name="vel_ki">10</param>
+      <param name="vel_kd">0.1</param>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
     </joint>
     <joint name="joint_4">
-      <param name="channel">3</param>
+      <param name="motor_id">4</param>
+      <param name="encoder_id">3</param>
+      <param name="vel_kp">10</param>
+      <param name="vel_ki">10</param>
+      <param name="vel_kd">0.1</param>
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>

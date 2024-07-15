@@ -17,6 +17,8 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "control_toolbox/pid.hpp"
+
 #include "pca9685_hardware_interface/visibility_control.h"
 #include <pca9685_hardware_interface/pca9685_comm.h>
 #include <pca9685_hardware_interface/encoder_wj166.hpp>
@@ -35,17 +37,22 @@ struct Joint
 {
   explicit Joint(const std::string & name) : joint_name(name)
   {
-    channel = 0;
     state = JointValue();
     command = JointValue();
+
+    motor_id = 0;
+    encoder_id = 0;
   }
 
   Joint() = default;
 
   std::string joint_name;
-  int channel;  
   JointValue state;
   JointValue command;
+
+  uint8_t motor_id;
+  uint8_t encoder_id;
+  control_toolbox::Pid vel_pid;
 };
 
 class Pca9685SystemHardware : public hardware_interface::SystemInterface
