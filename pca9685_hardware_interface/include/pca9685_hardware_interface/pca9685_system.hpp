@@ -27,6 +27,9 @@
 namespace pca9685_hardware_interface
 {
 
+#define VELOCITY_PID_PARAMS_PREFIX "vel_"
+#define POSITION_PID_PARAMS_PREFIX "pos_"
+
 struct JointValue
 {
   double position{0.0};
@@ -87,6 +90,9 @@ public:
   PCA9685_HARDWARE_INTERFACE_PUBLIC
   hardware_interface::return_type write(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
+
+private:
+  control_toolbox::Pid extractPID(std::string prefix, hardware_interface::ComponentInfo joint_info);
 
 private:
   std::map<std::string, Joint> hw_interfaces_;

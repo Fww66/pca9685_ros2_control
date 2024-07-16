@@ -54,6 +54,7 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name] = Joint(joint.name);
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
+    hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
     hw_interfaces_[joint.name].filter.configure(0.5);
   }
 
@@ -141,6 +142,63 @@ hardware_interface::return_type Pca9685SystemHardware::write(
   }
 
   return hardware_interface::return_type::OK;
+}
+
+control_toolbox::Pid Pca9685SystemHardware::extractPID(std::string prefix, hardware_interface::ComponentInfo joint_info)
+{
+  double kp;
+  double ki;
+  double kd;
+  double max_integral_error;
+  double min_integral_error;
+  bool antiwindup = false;
+
+  if (joint_info.parameters.find(prefix + "kp") != joint_info.parameters.end()) {
+    kp = std::stod(joint_info.parameters.at(prefix + "kp"));
+  } else {
+    kp = 0.0;
+  }
+
+  if (joint_info.parameters.find(prefix + "ki") != joint_info.parameters.end()) {
+    ki = std::stod(joint_info.parameters.at(prefix + "ki"));
+  } else {
+    ki = 0.0;
+  }
+
+  if (joint_info.parameters.find(prefix + "kd") != joint_info.parameters.end()) {
+    kd = std::stod(joint_info.parameters.at(prefix + "kd"));
+  } else {
+    kd = 0.0;
+  }
+
+  if (joint_info.parameters.find(prefix + "max_integral_error") != joint_info.parameters.end()) {
+    max_integral_error = std::stod(joint_info.parameters.at(prefix + "max_integral_error"));
+  } else {
+    max_integral_error = std::numeric_limits<double>::max();
+  }
+
+  if (joint_info.parameters.find(prefix + "min_integral_error") != joint_info.parameters.end()) {
+    min_integral_error = std::stod(joint_info.parameters.at(prefix + "min_integral_error"));
+  } else {
+    min_integral_error = std::numeric_limits<double>::min();
+  }
+
+  if (joint_info.parameters.find(prefix + "antiwindup") != joint_info.parameters.end()) {
+    if (joint_info.parameters.at(prefix + "antiwindup") == "true" ||
+      joint_info.parameters.at(prefix + "antiwindup") == "True")
+    {
+      antiwindup = true;
+    }
+  }
+
+  RCLCPP_INFO_STREAM(
+    rclcpp::get_logger("Pca9685SystemHardware"),
+    "Setting kp = " << kp << "\t"
+                    << " ki = " << ki << "\t"
+                    << " kd = " << kd << "\t"
+                    << " max_integral_error = " << max_integral_error);
+
+  return control_toolbox::Pid(kp, ki, kd, max_integral_error, min_integral_error, antiwindup);
 }
 
 }  // namespace pca9685_hardware_interface

@@ -13,7 +13,7 @@ class LowPassFilter
 {
 public:
   // Default constructor
-  LowPassFilter() : a1_(1.0), b1_(0.0)
+  LowPassFilter()
   {
   }
 
@@ -36,7 +36,7 @@ public:
     
     a1_ = a;
     b1_ = 1.0 - a1_;
-
+    
     return true;
   }
   bool configure(double sampling_frequency, double damping_frequency, double damping_intensity)
@@ -76,8 +76,8 @@ private:
   /** internal data storage (double). */
   double filtered_value{0.0}, filtered_old_value{0.0}, old_value{0.0};
   
-  double a1_{1.0}; /**< feedbackward coefficient. */
-  double b1_{0.0}; /**< feedforward coefficient. */
+  double a1_{0.0}; /**< feedbackward coefficient. */
+  double b1_{1.0}; /**< feedforward coefficient. */
 };
 
 }

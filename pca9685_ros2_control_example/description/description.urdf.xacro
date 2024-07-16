@@ -9,9 +9,14 @@
     <joint name="joint_1">
       <param name="motor_id">1</param>
       <param name="encoder_id">0</param>
+
       <param name="vel_kp">10</param>
       <param name="vel_ki">10</param>
       <param name="vel_kd">0.1</param>
+      <param name="vel_max_integral_error">10</param>
+      <param name="vel_min_integral_error">-10</param>
+      <param name="vel_antiwindup">false</param>
+
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
