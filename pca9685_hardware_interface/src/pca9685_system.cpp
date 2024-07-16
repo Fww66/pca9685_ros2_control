@@ -54,6 +54,7 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name] = Joint(joint.name);
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
+    hw_interfaces_[joint.name].filter.configure(0.5);
   }
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -117,7 +118,8 @@ hardware_interface::return_type Pca9685SystemHardware::read(
   for (auto & joint : hw_interfaces_)
   {
     joint.second.state.position = encoder_wj166_->get_position(joint.second.encoder_id);
-    joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
+    // joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
+    joint.second.filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),

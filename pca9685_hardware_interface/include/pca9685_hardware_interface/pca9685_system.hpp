@@ -22,6 +22,7 @@
 #include "pca9685_hardware_interface/visibility_control.h"
 #include <pca9685_hardware_interface/pca9685_comm.h>
 #include <pca9685_hardware_interface/encoder_wj166.hpp>
+#include <pca9685_hardware_interface/low_pass_filter.hpp>
 
 namespace pca9685_hardware_interface
 {
@@ -53,6 +54,7 @@ struct Joint
   uint8_t motor_id;
   uint8_t encoder_id;
   control_toolbox::Pid vel_pid;
+  encoder_filter::LowPassFilter filter;
 };
 
 class Pca9685SystemHardware : public hardware_interface::SystemInterface
