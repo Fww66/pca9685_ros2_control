@@ -21,7 +21,7 @@ public:
    * \brief Destructor of LowPassFilter class.
    */
   ~LowPassFilter()
-  {    
+  {
   }
 
   /*!
@@ -59,10 +59,14 @@ public:
    */
   bool update(const double & data_in, double & data_out)
   {
-    // Filter
-    data_out = b1_ * old_value + a1_ * filtered_old_value;
-    filtered_old_value = data_out;
-    old_value = data_in;
+    // // Filter
+    // data_out = b1_ * old_value + a1_ * filtered_old_value;
+    // filtered_old_value = data_out;
+    // old_value = data_in;
+
+    filtered_value = a1_ * filtered_old_value + b1_ * data_in;
+    filtered_old_value = filtered_value;
+    data_out = filtered_value;
 
     return true;
   }
@@ -70,14 +74,10 @@ public:
 private:
   // Filter parameters
   /** internal data storage (double). */
-  double filtered_value, filtered_old_value, old_value;
+  double filtered_value{0.0}, filtered_old_value{0.0}, old_value{0.0};
   
-  double a1_; /**< feedbackward coefficient. */
-  double b1_; /**< feedforward coefficient. */
-  
-  double sampling_frequency_;
-  double damping_frequency_;
-  double damping_intensity_;
+  double a1_{1.0}; /**< feedbackward coefficient. */
+  double b1_{0.0}; /**< feedforward coefficient. */
 };
 
 }

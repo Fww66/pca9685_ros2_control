@@ -60,7 +60,6 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
-
 std::vector<hardware_interface::StateInterface> Pca9685SystemHardware::export_state_interfaces()
 {
   std::vector<hardware_interface::StateInterface> state_interfaces;
