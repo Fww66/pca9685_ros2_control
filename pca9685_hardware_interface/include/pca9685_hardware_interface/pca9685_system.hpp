@@ -57,7 +57,7 @@ struct Joint
   uint8_t motor_id;
   uint8_t encoder_id;
   control_toolbox::Pid vel_pid;
-  encoder_filter::LowPassFilter filter;
+  encoder_filter::LowPassFilter vel_filter;
 };
 
 class Pca9685SystemHardware : public hardware_interface::SystemInterface

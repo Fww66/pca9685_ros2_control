@@ -26,7 +26,7 @@ class Implementation
   void   clear_all();                  // 清零所有编码器值
   
  private:
-
+  
   modbus_t *ctx_{NULL};
 };
 

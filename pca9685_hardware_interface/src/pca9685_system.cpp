@@ -55,7 +55,7 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
     hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
-    hw_interfaces_[joint.name].filter.configure(0.5);
+    hw_interfaces_[joint.name].vel_filter.configure(0.5);
   }
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -115,11 +115,13 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_deactivate(
 hardware_interface::return_type Pca9685SystemHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  encoder_wj166_->update(); // 从编码器WJ166中读取所有位置速度
+  
   for (auto & joint : hw_interfaces_)
   {
     joint.second.state.position = encoder_wj166_->get_position(joint.second.encoder_id);
     // joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
-    joint.second.filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
+    joint.second.vel_filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
@@ -130,15 +132,22 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 }
 
 hardware_interface::return_type Pca9685SystemHardware::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   for (auto & joint : hw_interfaces_)
   {
-    // pca.set_force(joint.second.motor_id, joint.second.command.velocity);
+    double vel_goal = joint.second.command.velocity;
+    double vel = joint.second.state.velocity;
+    double error = vel_goal - vel;
+    uint64_t dt = period.nanoseconds();
+    double cmd = joint.second.vel_pid.computeCommand(error, dt);
+    
+    // pca.set_force(joint.second.motor_id, cmd);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
-      "command joint: %s, motor_id: %d, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.motor_id, joint.second.command.velocity);
+      "command joint: %s, motor_id: %d, velocity: %.3f", 
+      joint.second.joint_name.c_str(),  joint.second.motor_id, joint.second.command.velocity);
   }
 
   return hardware_interface::return_type::OK;
