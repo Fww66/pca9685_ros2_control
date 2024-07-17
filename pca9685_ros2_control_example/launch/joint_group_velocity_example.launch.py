@@ -53,6 +53,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_group_velocity_controller", "--controller-manager", "/controller_manager"],
+        output="both",
     )
 
     nodes = [

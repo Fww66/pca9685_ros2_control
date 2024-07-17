@@ -117,17 +117,15 @@ hardware_interface::return_type Pca9685SystemHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   encoder_wj166_->update(); // 从编码器WJ166中读取所有位置速度
-  
-  for (auto & joint : hw_interfaces_)
-  {
-    joint.second.state.position = encoder_wj166_->get_position(joint.second.encoder_id);
-    // joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
-    // joint.second.vel_filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
 
-    RCLCPP_INFO(
-      rclcpp::get_logger("Pca9685SystemHardware"),
-      "state joint: %s, encoder_id: %d, position: %.3f, velocity: %.3f", joint.second.joint_name.c_str(),  joint.second.encoder_id, joint.second.state.position, joint.second.state.velocity);
-  }
+  auto & joint = hw_interfaces_["joint_1"];
+  joint.state.position = encoder_wj166_->get_position(joint.encoder_id);
+  joint.state.velocity = encoder_wj166_->get_velocity(joint.encoder_id);
+  // joint.vel_filter.update(encoder_wj166_->get_velocity(joint.encoder_id), joint.state.velocity);
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("Pca9685SystemHardware"),
+    "state joint: %s, encoder_id: %d, position: %.3f, velocity: %.3f", joint.joint_name.c_str(),  joint.encoder_id, joint.state.position, joint.state.velocity);
 
   return hardware_interface::return_type::OK;
 }
@@ -135,25 +133,26 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 hardware_interface::return_type Pca9685SystemHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  for (auto & joint : hw_interfaces_)
-  {
-    double vel_goal = joint.second.command.velocity;
-    double vel = joint.second.state.velocity;
-    double error = vel_goal - vel;
-    // uint64_t dt = period.nanoseconds();
-    double dt = period.seconds();
+  encoder_wj166_->update(); // 从编码器WJ166中读取所有位置速度
+  
+  auto & joint = hw_interfaces_["joint_1"];
 
-    double cmd = joint.second.vel_pid.Update(error, dt);
+  joint.state.position = encoder_wj166_->get_position(joint.encoder_id);
+  joint.state.velocity = encoder_wj166_->get_velocity(joint.encoder_id);
 
-    // double cmd = joint.second.vel_pid.computeCommand(error, dt);
-    
-    // pca.set_force(joint.second.motor_id, cmd);
+  double goal_vel = joint.command.velocity;
+  double cur_vel = joint.state.velocity;
+  double error = goal_vel - cur_vel;
+  double dt = period.seconds();
 
-    RCLCPP_INFO(
-      rclcpp::get_logger("Pca9685SystemHardware"),
-      "command joint: %s, motor_id: %d, velocity: %.3f", 
-      joint.second.joint_name.c_str(),  joint.second.motor_id, joint.second.command.velocity);
-  }
+  double cmd = joint.vel_pid.Update(error, dt);
+
+  // pca.set_force(joint.second.motor_id, cmd);
+
+  RCLCPP_INFO(
+    rclcpp::get_logger("Pca9685SystemHardware"),
+    "command joint: %s, motor_id: %d, dt: %.3f, error: %.3f, goal_vel: %.3f, cur_vel: %.3f, cmd: %.3f", 
+    joint.joint_name.c_str(),  joint.motor_id, dt, error, goal_vel, cur_vel, cmd);
 
   return hardware_interface::return_type::OK;
 }
