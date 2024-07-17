@@ -54,7 +54,8 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name] = Joint(joint.name);
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
-    hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
+    // hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
+    hw_interfaces_[joint.name].vel_pid.Init(1.0, 0.008, 0.0, 0.0, 0.0, 1.0, -1.0);
     hw_interfaces_[joint.name].vel_filter.configure(0.5);
   }
 
@@ -121,7 +122,7 @@ hardware_interface::return_type Pca9685SystemHardware::read(
   {
     joint.second.state.position = encoder_wj166_->get_position(joint.second.encoder_id);
     // joint.second.state.velocity = encoder_wj166_->get_velocity(joint.second.encoder_id);
-    joint.second.vel_filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
+    // joint.second.vel_filter.update(encoder_wj166_->get_velocity(joint.second.encoder_id), joint.second.state.velocity);
 
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
@@ -139,8 +140,12 @@ hardware_interface::return_type Pca9685SystemHardware::write(
     double vel_goal = joint.second.command.velocity;
     double vel = joint.second.state.velocity;
     double error = vel_goal - vel;
-    uint64_t dt = period.nanoseconds();
-    double cmd = joint.second.vel_pid.computeCommand(error, dt);
+    // uint64_t dt = period.nanoseconds();
+    double dt = period.seconds();
+
+    double cmd = joint.second.vel_pid.Update(error, dt);
+
+    // double cmd = joint.second.vel_pid.computeCommand(error, dt);
     
     // pca.set_force(joint.second.motor_id, cmd);
 
