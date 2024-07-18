@@ -26,8 +26,10 @@ class Implementation
   void   clear_all();                  // 清零所有编码器值
   
  private:
-  
   modbus_t *ctx_{NULL};
+
+  double position_[4] {0.0};
+  double velocity_[4] {0.0};
 };
 
 }  // namespace encoder_wj166

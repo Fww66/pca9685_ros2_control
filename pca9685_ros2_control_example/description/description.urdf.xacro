@@ -10,11 +10,11 @@
       <param name="motor_id">1</param>
       <param name="encoder_id">0</param>
 
-      <param name="vel_kp">10</param>
-      <param name="vel_ki">10</param>
-      <param name="vel_kd">0.1</param>
-      <param name="vel_max_integral_error">10</param>
-      <param name="vel_min_integral_error">-10</param>
+      <param name="vel_kp">0.05</param>
+      <param name="vel_ki">0.08</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">0.8</param>
+      <param name="vel_min_integral_error">-0.8</param>
       <param name="vel_antiwindup">false</param>
 
       <command_interface name="velocity"/>
@@ -24,9 +24,14 @@
     <joint name="joint_2">
       <param name="motor_id">2</param>
       <param name="encoder_id">1</param>
-      <param name="vel_kp">10</param>
-      <param name="vel_ki">10</param>
-      <param name="vel_kd">0.1</param>
+
+      <param name="vel_kp">0.025</param>
+      <param name="vel_ki">0.015</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">0.25</param>
+      <param name="vel_min_integral_error">-0.25</param>
+      <param name="vel_antiwindup">false</param>
+
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
@@ -34,9 +39,14 @@
     <joint name="joint_3">
       <param name="motor_id">3</param>
       <param name="encoder_id">2</param>
-      <param name="vel_kp">10</param>
-      <param name="vel_ki">10</param>
-      <param name="vel_kd">0.1</param>
+      
+      <param name="vel_kp">0.025</param>
+      <param name="vel_ki">0.015</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">0.25</param>
+      <param name="vel_min_integral_error">-0.25</param>
+      <param name="vel_antiwindup">false</param>
+
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>
@@ -44,9 +54,14 @@
     <joint name="joint_4">
       <param name="motor_id">4</param>
       <param name="encoder_id">3</param>
-      <param name="vel_kp">10</param>
-      <param name="vel_ki">10</param>
-      <param name="vel_kd">0.1</param>
+
+      <param name="vel_kp">0.025</param>
+      <param name="vel_ki">0.015</param>
+      <param name="vel_kd">0.0</param>
+      <param name="vel_max_integral_error">0.25</param>
+      <param name="vel_min_integral_error">-0.25</param>
+      <param name="vel_antiwindup">false</param>
+
       <command_interface name="velocity"/>
       <state_interface name="velocity"/>
       <state_interface name="position"/>

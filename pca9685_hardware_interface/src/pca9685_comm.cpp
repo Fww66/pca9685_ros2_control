@@ -1,6 +1,7 @@
 #include "pca9685_hardware_interface/pca9685_comm.h"
 #include <unistd.h>
 #include <cmath>
+#include <map>
 
 #include "pca9685_hardware_interface/Constants.h"
 #include "pca9685_hardware_interface/I2CPeripheral.h"
@@ -20,7 +21,13 @@ PCA9685::PCA9685(const std::string &device, int address) {
   usleep(5'000);
 }
 
-PCA9685::~PCA9685() = default;
+PCA9685::~PCA9685()
+{
+  set_force(1, 0.0);
+  set_force(2, 0.0);
+  set_force(3, 0.0);
+  set_force(4, 0.0);
+}
 
 void PCA9685::set_pwm_freq(const double freq_hz) {
   frequency = freq_hz;
@@ -67,7 +74,19 @@ void PCA9685::set_pwm_ms(const int channel, const double ms) {
 
 void PCA9685::set_force(const int id, double cmd)
 {
-  
+  // static std::map<int, std::pair<int, int>> motors = { {1, {11, 13}}, {2, {8, 10}}, {3, {4, 2}}, {4, {5, 7}} };
+  static std::map<int, std::pair<int, int>> motors = { {1, {13, 11}}, {2, {8, 10}}, {3, {4, 2}}, {4, {5, 7}} };
+
+  if (cmd < 0.0)
+  {
+    set_pwm(motors[id].first, 0, 0);
+    set_pwm(motors[id].second, 0, -4096*cmd-1);
+  }
+  else
+  {
+    set_pwm(motors[id].first, 0, 4096*cmd-1);
+    set_pwm(motors[id].second, 0, 0);
+  }
 }
 
 }  // namespace PiPCA9685
