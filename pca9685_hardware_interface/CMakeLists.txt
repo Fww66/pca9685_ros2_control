@@ -33,7 +33,6 @@ add_library(
   src/pca9685_comm.cpp
   src/I2CPeripheral.cpp
   src/encoder_wj166.cpp
-  src/PID.cc
 )
 
 target_compile_features(pca9685_hardware_interface PUBLIC cxx_std_17)

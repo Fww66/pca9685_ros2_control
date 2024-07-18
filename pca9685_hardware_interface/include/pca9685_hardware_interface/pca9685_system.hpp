@@ -23,7 +23,6 @@
 #include <pca9685_hardware_interface/pca9685_comm.h>
 #include <pca9685_hardware_interface/encoder_wj166.hpp>
 #include <pca9685_hardware_interface/low_pass_filter.hpp>
-#include <pca9685_hardware_interface/PID.hh>
 
 
 namespace pca9685_hardware_interface
@@ -57,8 +56,8 @@ struct Joint
   JointValue command;
 
   uint8_t motor_id;
-  uint8_t encoder_id;
-  gazebo::common::PID vel_pid;
+  uint8_t encoder_id;  
+  control_toolbox::Pid vel_pid;
   encoder_filter::LowPassFilter vel_filter;
 };
 
@@ -102,6 +101,11 @@ private:
   std::shared_ptr<encoder_wj166::Implementation> encoder_wj166_; // 获取编码器值
 
   // PiPCA9685::PCA9685 pca; // 控制电机旋转
+
+  // Timestamps to calculate position for velocity
+  rclcpp::Clock clock_;
+  rclcpp::Time last_timestamp_;
+  rclcpp::Time current_timestamp;  // Local variable, but avoid initialization on each read
 };
 
 }  // namespace pca9685_hardware_interface

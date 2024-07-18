@@ -54,10 +54,11 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name] = Joint(joint.name);
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
-    // hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
-    hw_interfaces_[joint.name].vel_pid.Init(1.0, 0.008, 0.0, 0.0, 0.0, 1.0, -1.0);
+    hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
     hw_interfaces_[joint.name].vel_filter.configure(0.5);
   }
+
+  clock_ = rclcpp::Clock();
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -131,8 +132,12 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 }
 
 hardware_interface::return_type Pca9685SystemHardware::write(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  current_timestamp = clock_.now();
+  rclcpp::Duration duration = current_timestamp - last_timestamp_;
+  last_timestamp_ = current_timestamp;
+
   encoder_wj166_->update(); // 从编码器WJ166中读取所有位置速度
   
   auto & joint = hw_interfaces_["joint_1"];
@@ -143,16 +148,16 @@ hardware_interface::return_type Pca9685SystemHardware::write(
   double goal_vel = joint.command.velocity;
   double cur_vel = joint.state.velocity;
   double error = goal_vel - cur_vel;
-  double dt = period.seconds();
+  uint64_t dt = duration.nanoseconds();
 
-  double cmd = joint.vel_pid.Update(error, dt);
+  double cmd = joint.vel_pid.computeCommand(error, dt);
 
-  // pca.set_force(joint.second.motor_id, cmd);
+  // pca.set_force(joint.motor_id, cmd);
 
   RCLCPP_INFO(
     rclcpp::get_logger("Pca9685SystemHardware"),
     "command joint: %s, motor_id: %d, dt: %.3f, error: %.3f, goal_vel: %.3f, cur_vel: %.3f, cmd: %.3f", 
-    joint.joint_name.c_str(),  joint.motor_id, dt, error, goal_vel, cur_vel, cmd);
+    joint.joint_name.c_str(),  joint.motor_id, dt/1E9, error, goal_vel, cur_vel, cmd);
 
   return hardware_interface::return_type::OK;
 }

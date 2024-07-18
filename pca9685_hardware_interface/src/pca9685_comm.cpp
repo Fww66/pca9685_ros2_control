@@ -65,4 +65,9 @@ void PCA9685::set_pwm_ms(const int channel, const double ms) {
   set_pwm(channel, 0, bits);
 }
 
+void PCA9685::set_force(const int id, double cmd)
+{
+  
+}
+
 }  // namespace PiPCA9685

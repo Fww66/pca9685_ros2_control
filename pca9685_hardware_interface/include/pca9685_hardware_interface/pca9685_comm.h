@@ -21,6 +21,8 @@ public:
 
     void set_pwm_ms(const int channel, const double ms);
 
+    void set_force(const int id, double cmd);
+
 private:
     std::unique_ptr<I2CPeripheral> i2c_dev;
     
