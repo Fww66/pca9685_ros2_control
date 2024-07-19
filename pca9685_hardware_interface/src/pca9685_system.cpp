@@ -134,8 +134,25 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 hardware_interface::return_type Pca9685SystemHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
+  static std::map<int, control_toolbox::Pid::Gains> pid_gains = 
+  {
+    {0, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {1, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {2, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {3, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {4, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {5, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {6, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {7, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {8, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
+    {9, { 0.05, 0.08, 0.0, 0.8, -0.8, false}}    
+  };
+
   for (auto & joint : hw_interfaces_)
   {
+    int level = static_cast<int>(std::floor(std::fabs(joint.second.state.velocity)));    
+    joint.second.vel_pid.setGains(pid_gains[level]);
+    
     double goal_vel = joint.second.command.velocity;
     double cur_vel = joint.second.state.velocity;
     double error = goal_vel - cur_vel;
