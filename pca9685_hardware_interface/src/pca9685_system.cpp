@@ -139,17 +139,17 @@ hardware_interface::return_type Pca9685SystemHardware::write(
     double goal_vel = joint.second.command.velocity;
     double cur_vel = joint.second.state.velocity;
     double error = goal_vel - cur_vel;
-    double dt = period.nanoseconds();
+    uint64_t dt = period.nanoseconds();
     double cmd = joint.second.vel_pid.computeCommand(error, dt);
     
     cmd = std::clamp(cmd, -1.0, 1.0);
-
+    
     joint.second.set_force(cmd);
     
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
       "command joint: %s, motor_id: %d, dt: %.3f, goal_vel:%.3f, cmd:%.3f, cur_vel:%.3f", 
-      joint.second.joint_name.c_str(), joint.second.motor_id, dt/1e9, joint.second.command.velocity, cmd, cur_vel);
+      joint.second.joint_name.c_str(), joint.second.motor_id, 1.0*dt/1e9, joint.second.command.velocity, cmd, cur_vel);
   }
 
   return hardware_interface::return_type::OK;
