@@ -1,20 +1,23 @@
 
 #include "pca9685_hardware_interface/encoder_wj166.hpp"
 
+#include <system_error>
+#include <string>
+#include <cmath>
+
 namespace encoder_wj166 {
 
 Implementation::Implementation(const char *device_path /*= "/dev/ttyUSB0"*/)
 {
   ctx_ = modbus_new_rtu(device_path, 9600, 'N', 8, 1);
-  if (ctx_ == NULL)                //对应的设备描述符为ttyUSB0
+  if (NULL == ctx_)                //对应的设备描述符为ttyUSB0
   {
-    fprintf(stderr, "Unable to allocate libmodbus contex\n");
-    return;
+    throw std::system_error(errno, std::system_category(), "Unable to allocate libmodbus contex.");
   }
-  if (modbus_connect(ctx_) == -1) //等待连接设备
+  if (-1 == modbus_connect(ctx_)) //等待连接设备
   {
-    fprintf(stderr, "Connection failed:%s\n", modbus_strerror(errno));
-    return;
+    const auto msg = "Connection failed: " + std::string(modbus_strerror(errno));
+    throw std::system_error(errno, std::system_category(), msg);
   }
 
   modbus_rtu_set_serial_mode(ctx_, MODBUS_RTU_RS485);    //set COM mode

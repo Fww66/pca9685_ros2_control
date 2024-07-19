@@ -2,13 +2,6 @@
 #ifndef __ENCODER_WJ166_HPP__
 #define __ENCODER_WJ166_HPP__
 
-#include <memory>
-#include <string>
-#include <chrono>
-#include <thread>
-#include <mutex>
-#include <cmath>
-
 #include <modbus/modbus.h>
 
 namespace encoder_wj166 {
