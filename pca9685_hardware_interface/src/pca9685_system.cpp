@@ -53,6 +53,7 @@ hardware_interface::CallbackReturn Pca9685SystemHardware::on_init(
     hw_interfaces_[joint.name] = Joint(joint.name);
     hw_interfaces_[joint.name].motor_id = std::stoi(joint.parameters.at("motor_id"));
     hw_interfaces_[joint.name].encoder_id = std::stoi(joint.parameters.at("encoder_id"));
+    hw_interfaces_[joint.name].reverse = extractReverse(joint);
     hw_interfaces_[joint.name].vel_pid = extractPID(VELOCITY_PID_PARAMS_PREFIX, joint);
     hw_interfaces_[joint.name].set_force = std::bind(&PiPCA9685::PCA9685::set_force, &pca_, hw_interfaces_[joint.name].motor_id, std::placeholders::_1);
   }
@@ -118,8 +119,10 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 
   for (auto & joint : hw_interfaces_)
   {
-    joint.second.state.position = encoder_wj166_.get_position(joint.second.encoder_id);
-    joint.second.state.velocity = encoder_wj166_.get_velocity(joint.second.encoder_id);
+    double sign = joint.second.reverse ? -1.0 : 1.0;
+    
+    joint.second.state.position = sign * encoder_wj166_.get_position(joint.second.encoder_id);
+    joint.second.state.velocity = sign * encoder_wj166_.get_velocity(joint.second.encoder_id);
 
     // RCLCPP_INFO(
     //   rclcpp::get_logger("Pca9685SystemHardware"),
@@ -150,6 +153,8 @@ hardware_interface::return_type Pca9685SystemHardware::write(
 
   for (auto & joint : hw_interfaces_)
   {
+    double sign = joint.second.reverse ? -1.0 : 1.0;
+    
     int level = static_cast<int>(std::floor(std::fabs(joint.second.state.velocity)));    
     joint.second.vel_pid.setGains(pid_gains[level]);
     
@@ -227,6 +232,22 @@ control_toolbox::Pid Pca9685SystemHardware::extractPID(std::string prefix, hardw
                     << " max_integral_error = " << max_integral_error);
 
   return control_toolbox::Pid(kp, ki, kd, max_integral_error, min_integral_error, antiwindup);
+}
+
+bool Pca9685SystemHardware::extractReverse(hardware_interface::ComponentInfo joint_info)
+{
+  bool reverse = false;
+
+  if (joint_info.parameters.find("reverse") != joint_info.parameters.end()) 
+  {
+    if (joint_info.parameters.at("reverse") == "true" 
+    || joint_info.parameters.at("reverse") == "True")
+    {
+      reverse = true;
+    }
+  }
+
+  return reverse;
 }
 
 }  // namespace pca9685_hardware_interface

@@ -1,0 +1,60 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 10  # Hz
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    mecanum_drive_controller:
+      type: mecanum_drive_controller/MecanumDriveController
+
+mecanum_drive_controller:
+  ros__parameters:
+    front_left_wheel_joint: "joint_1"
+    front_right_wheel_joint: "joint_4"
+    rear_left_wheel_joint: "joint_2"
+    rear_right_wheel_joint: "joint_3"
+
+    publish_rate: 10.0
+    cmd_vel_timeout: 0.5
+    odom_frame_id: odom
+    base_frame_id: base_footprint
+
+    # Override URDF look-up for wheel separation since the parent link is not the base_link.
+    wheel_separation_x: 0.250
+    wheel_separation_y: 0.314
+    wheels_radius: 0.0635
+
+    odom_ratio_linear_x: 1.0 # linear_x-direction correction coefficient
+    odom_ratio_linear_y: 1.0 # linear_y-direction correction coefficient
+    odom_ratio_angular_z: 1.0 # angular_z-direction correction coefficient
+
+    # Odometry fused with IMU is published by robot_localization, so
+    # no need to publish a TF based on encoders alone.
+    enable_odom_tf: true
+
+    # Velocity and acceleration limits
+    # Whenever a min_* is unspecified, default to -max_*
+    linear:
+      x:
+        has_velocity_limits    : true
+        max_velocity           : 0.5   # m/s
+        min_velocity           : -0.5  # m/s
+        has_acceleration_limits: true
+        max_acceleration       : 1.0   # m/s^2
+        min_acceleration       : -1.0  # m/s^2
+      y:
+        has_velocity_limits    : true
+        max_velocity           : 0.5   # m/s
+        min_velocity           : -0.5  # m/s
+        has_acceleration_limits: true
+        max_acceleration       : 1.0   # m/s^2
+        min_acceleration       : -1.0  # m/s^2
+    angular:
+      z:
+        has_velocity_limits    : true
+        max_velocity           : 1.0   # rad/s
+        min_velocity           : -1.0  # rad/s
+        has_acceleration_limits: true
+        max_acceleration       : 1.0   # rad/s^2
+        min_acceleration       : -1.0  # rad/s^2

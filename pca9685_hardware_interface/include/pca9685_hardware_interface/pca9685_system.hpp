@@ -39,7 +39,9 @@ struct JointValue
 
 struct Joint
 {
-  explicit Joint(const std::string & name) : joint_name(name)
+  explicit Joint(const std::string & name) 
+  : joint_name(name)
+  , reverse(false)
   {
     state = JointValue();
     command = JointValue();
@@ -56,6 +58,9 @@ struct Joint
 
   uint8_t motor_id;
   uint8_t encoder_id;  
+
+  bool reverse;
+
   control_toolbox::Pid vel_pid;
   
   std::function<void(double)> set_force;
@@ -94,6 +99,7 @@ public:
 
 private:
   control_toolbox::Pid extractPID(std::string prefix, hardware_interface::ComponentInfo joint_info);
+  bool extractReverse(hardware_interface::ComponentInfo joint_info);
 
 private:
   std::map<std::string, Joint> hw_interfaces_;
