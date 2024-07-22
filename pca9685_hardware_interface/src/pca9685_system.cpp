@@ -137,41 +137,43 @@ hardware_interface::return_type Pca9685SystemHardware::read(
 hardware_interface::return_type Pca9685SystemHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
-  static std::map<int, control_toolbox::Pid::Gains> pid_gains = 
+    static std::map<int, control_toolbox::Pid::Gains> pid_gains = 
   {
-    {0, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {1, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {2, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {3, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {4, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {5, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {6, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {7, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {8, { 0.05, 0.08, 0.0, 0.8, -0.8, false}},
-    {9, { 0.05, 0.08, 0.0, 0.8, -0.8, false}}    
+    {0, { 0.005,    0.005,    0.001,   0.045,  -0.045, false}},
+    {1, { 0.005,    0.005,    0.001,   0.05,  -0.05, false}},
+    {2, { 0.006,    0.005,    0.00,   0.1,  -0.1, false}},
+    {3, { 0.006,    0.005,    0.00,   0.1,  -0.1, false}},
+    {4, { 0.006,    0.005,    0.00,   0.2,  -0.2, false}},
+    {5, { 0.006,    0.005,    0.00,   0.2,  -0.2, false}},
+    {6, { 0.007,    0.08,    0.00,   0.5,  -0.5, false}},
+    {7, { 0.01,     0.05,    0.00,   0.99,  -0.99, false}},
+    {8, { 0.02,     0.08,    0.00,   0.99,  -0.99, false}},
+    {9, { 0.025,    0.08,    0.00,   0.99,  -0.99, false}}    
   };
 
   for (auto & joint : hw_interfaces_)
   {
     double sign = joint.second.reverse ? -1.0 : 1.0;
-    
+
     int level = static_cast<int>(std::floor(std::fabs(joint.second.state.velocity)));    
     joint.second.vel_pid.setGains(pid_gains[level]);
-    
+
     double goal_vel = joint.second.command.velocity;
     double cur_vel = joint.second.state.velocity;
     double error = goal_vel - cur_vel;
     uint64_t dt = period.nanoseconds();
     double cmd = joint.second.vel_pid.computeCommand(error, dt);
-    
-    cmd = std::clamp(cmd, -1.0, 1.0);
-    
-    joint.second.set_force(cmd);
+    if(cmd>-0.03 && cmd<0.03){cmd = 0;}
+    else if(cmd>0){cmd = std::clamp(cmd, 0.03, 1.0);}
+    else {cmd = std::clamp(cmd, -1.0, -0.03);}
+
+
+    joint.second.set_force(sign*cmd);
     
     RCLCPP_INFO(
       rclcpp::get_logger("Pca9685SystemHardware"),
-      "command joint: %s, motor_id: %d, dt: %.3f, goal_vel:%.3f, cmd:%.3f, cur_vel:%.3f", 
-      joint.second.joint_name.c_str(), joint.second.motor_id, 1.0*dt/1e9, joint.second.command.velocity, cmd, cur_vel);
+      "command joint: %s, motor_id: %d, dt: %.2f, goal_vel:%.2f, cmd:%.3f, cur_vel:%.3f,sign:%.3f", 
+      joint.second.joint_name.c_str(), joint.second.motor_id, dt/1e9, joint.second.command.velocity, cmd, cur_vel,sign);
   }
 
   return hardware_interface::return_type::OK;
