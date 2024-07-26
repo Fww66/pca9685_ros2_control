@@ -9,7 +9,7 @@ namespace encoder_wj166 {
 class Implementation
 {
  public:
-  Implementation(const char *device_path = "/dev/ttyUSB0");
+  Implementation(const char *device_path = "/dev/ttySC0");
   virtual ~Implementation();
   
   void   update();                     // 从编码器WJ166中读取所有位置速度

@@ -49,6 +49,19 @@ def generate_launch_description():
         output="both",
     )
 
+    robot_state_pub_node = Node(
+        package="robot_state_publisher",
+        executable="robot_state_publisher",
+        output="both",
+        parameters=[robot_description],
+    )
+
+    joint_state_broadcaster_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+    )
+
     robot_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
@@ -56,9 +69,24 @@ def generate_launch_description():
         output="both",
     )
 
+    # Delay start of robot_controller after `joint_state_broadcaster`
+    delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[robot_controller_spawner],
+        )
+    )
+
+    # nodes = [
+    #     control_node,
+    #     robot_controller_spawner
+    # ]
+
     nodes = [
         control_node,
-        robot_controller_spawner
+        robot_state_pub_node,
+        joint_state_broadcaster_spawner,
+        delay_robot_controller_spawner_after_joint_state_broadcaster_spawner
     ]
 
     return LaunchDescription(nodes)
